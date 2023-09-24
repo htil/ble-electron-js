@@ -1,7 +1,7 @@
 # Getting Started
 
 ```
-    git clone https://github.com/htil/hello-electron-js.git
+    git clone https://github.com/htil/ble-electron-js.git
     yarn
     yarn start
 ```
