@@ -10,6 +10,10 @@ See steps below if you do not have node and yarn setup on Windows.
 
 [https://www.youtube.com/watch?v=HyJ89KCB7x8](https://www.youtube.com/watch?v=HyJ89KCB7x8)
 
+# Installing Electron
+
+`yarn add --dev electron`
+
 # Fix Permission Issue
 
 [Fix for PowerShell Script cannot be loaded because running scripts is disabled on this system error](https://www.sharepointdiary.com/2014/03/fix-for-powershell-script-cannot-be-loaded-because-running-scripts-is-disabled-on-this-system.html)
