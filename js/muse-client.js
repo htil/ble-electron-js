@@ -1,16 +1,25 @@
 //import {fromEvent} from "https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"
-const { fromEvent } = rxjs;
+const { fromEvent, merge } = rxjs;
 const { first, map, takeUntil, scan, concatMap, filter, share } =
   rxjs.operators;
 
 const TELEMETRY_CHARACTERISTIC = "273e000b-4c4d-454d-96be-f03bac821358";
 
+const EEG_CHARACTERISTICS = [
+  "273e0003-4c4d-454d-96be-f03bac821358",
+  "273e0004-4c4d-454d-96be-f03bac821358",
+  "273e0005-4c4d-454d-96be-f03bac821358",
+  "273e0006-4c4d-454d-96be-f03bac821358",
+  "273e0007-4c4d-454d-96be-f03bac821358",
+];
+
+export const EEG_FREQUENCY = 256
+export const EEG_SAMPLES_PER_READING = 12
+
 export const MuseElectronClient = class {
-  constructor(callback, connect_button_id = "bluetooth") {
+  constructor() {
     // Connect Events
-    document.getElementById(connect_button_id).onclick = function (e) {
-      this.connect();
-    }.bind(this);
+
 
     //console.log(MuseClient)
 
@@ -29,6 +38,7 @@ export const MuseElectronClient = class {
     this.device = null;
     this.deviceName = null;
     this.telemetryData = null;
+    this.lastTimestamp = null
   }
 
   parseTelemetry(data) {
@@ -39,6 +49,25 @@ export const MuseElectronClient = class {
       // Next 2 bytes are probably ADC millivolt level, not sure
       temperature: data.getUint16(8),
     };
+  }
+
+  decodeUnsigned12BitData(samples) {
+    var samples12Bit = [];
+    for (var i = 0; i < samples.length; i++) {
+      if (i % 3 === 0) {
+        samples12Bit.push((samples[i] << 4) | (samples[i + 1] >> 4));
+      } else {
+        samples12Bit.push(((samples[i] & 0xf) << 8) | samples[i + 1]);
+        i++;
+      }
+    }
+    return samples12Bit;
+  }
+
+  decodeEEGSamples(samples) {
+    return this.decodeUnsigned12BitData(samples).map(function (n) {
+      return 0.48828125 * (n - 0x800);
+    });
   }
 
   parseControl(controlData) {
@@ -149,35 +178,23 @@ export const MuseElectronClient = class {
         });
 
       // Battery
-
       const service = await this.gatt.getPrimaryService(this.MUSE_SERVICE);
-      console.log("service", service);
-
-      
       const telemetryCharacteristic = await service.getCharacteristic(
         TELEMETRY_CHARACTERISTIC
       );
-      console.log(telemetryCharacteristic);
-
       this.telemetryData = (
         await this.observableCharacteristic(telemetryCharacteristic)
-      ).pipe(
-        map(this.parseTelemetry)
-      );
-      
+      ).pipe(map(this.parseTelemetry));
 
       // Telemetry info
-
-      
+      /*
       this.telemetryData.subscribe((status) => {
         console.log(status);
       });
-      
+      */
 
       // Gyroscope
-
       const GYROSCOPE_CHARACTERISTIC = "273e0009-4c4d-454d-96be-f03bac821358";
-
       const gyroscopeCharacteristic = await service.getCharacteristic(
         GYROSCOPE_CHARACTERISTIC
       );
@@ -187,10 +204,51 @@ export const MuseElectronClient = class {
       ).pipe(map(this.parseGyroscope.bind(this)));
 
       
+      /*
       this.gyroscopeData.subscribe((status) => {
-        //console.log(status.samples[0]);
-      });
+        console.log(status.samples[0]);
+      });*/
+      
 
+      // EEG
+      this.eegCharacteristics = [];
+      const eegObservables = [];
+      const channelCount = 4; // Only works for old muse devices
+
+      for (let channelIndex = 0; channelIndex < channelCount; channelIndex++) {
+        console.log("channel ", channelIndex);
+        const characteristicId = EEG_CHARACTERISTICS[channelIndex];
+        const eegChar = await service.getCharacteristic(characteristicId);
+        eegObservables.push(
+          (await this.observableCharacteristic(eegChar)).pipe(
+            map(data => {
+              const eventIndex = data.getUint16(0)
+              return {
+                electrode: channelIndex,
+                index: eventIndex,
+                samples: this.decodeEEGSamples(
+                  new Uint8Array(data.buffer).subarray(2)
+                ),
+                timestamp: this.getTimestamp(
+                  eventIndex,
+                  EEG_SAMPLES_PER_READING,
+                  EEG_FREQUENCY
+                )
+              }
+            })
+          )
+        )
+        this.eegCharacteristics.push(eegChar)
+      }
+      this.eegReadings = merge(...eegObservables)
+
+      /*
+      this.eegReadings.subscribe(sample => {
+        console.log(sample)
+      })
+      */
+
+      // Control
       const CONTROL_CHARACTERISTIC = "273e0001-4c4d-454d-96be-f03bac821358";
       this.controlChar = await service.getCharacteristic(
         CONTROL_CHARACTERISTIC
@@ -205,23 +263,45 @@ export const MuseElectronClient = class {
 
       this.controlResponses = this.parseControl(this.rawControlData);
       this.start();
-
-      //console.log(this.telemetryData)
-
-      /*      
-
-
-      this.telemetryData.subscribe((telemetry) => {
-        console.log(telemetry);
-      });
-      
-      */
     } else {
       console.log("error with gatt object.");
     }
   }
 
+  get_eeg() {
+   return this.eegReadings
+  }
+
   get_device() {
     return this.device;
+  }
+
+  getTimestamp(eventIndex, samplesPerReading, frequency) {
+    const READING_DELTA = 1000 * (1.0 / frequency) * samplesPerReading
+ 
+    if (this.lastIndex === null || this.lastTimestamp === null) {
+      this.lastIndex = eventIndex
+      this.lastTimestamp = new Date().getTime() - READING_DELTA
+      
+    }
+
+    // Handle wrap around
+    while (this.lastIndex - eventIndex > 0x1000) {
+      eventIndex += 0x10000
+    }
+
+    if (eventIndex === this.lastIndex) {
+      
+      return this.lastTimestamp
+    }
+    if (eventIndex > this.lastIndex) {
+      this.lastTimestamp += READING_DELTA * (eventIndex - this.lastIndex)
+      this.lastIndex = eventIndex
+     
+      return this.lastTimestamp
+    } else {
+      
+      return this.lastTimestamp - READING_DELTA * (this.lastIndex - eventIndex)
+    }
   }
 };

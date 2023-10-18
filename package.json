@@ -9,5 +9,9 @@
   },
   "devDependencies": {
     "electron": "^26.2.2"
+  },
+  "dependencies": {
+    "ganglion-ble": "^1.0.0",
+    "muse-js": "^3.3.0"
   }
 }
