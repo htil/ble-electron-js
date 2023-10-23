@@ -216,7 +216,6 @@ export const MuseElectronClient = class {
       const channelCount = 4; // Only works for old muse devices
 
       for (let channelIndex = 0; channelIndex < channelCount; channelIndex++) {
-        console.log("channel ", channelIndex);
         const characteristicId = EEG_CHARACTERISTICS[channelIndex];
         const eegChar = await service.getCharacteristic(characteristicId);
         eegObservables.push(

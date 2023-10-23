@@ -1,0 +1,39 @@
+import { TensorDSP } from "./tensor-dsp.js"
+
+export const Signal = class {
+    constructor(graph_handlers, buffer_size=256) {
+        this.graph_handlers = graph_handlers
+        this.channels = {}
+        this.BUFFER_SIZE = buffer_size
+        this.tensor = new TensorDSP("muse")
+    }
+
+    add_data(sample) {
+        let { electrode, samples } = sample;
+        if (!this.channels[electrode]) {
+            this.channels[electrode] = [];
+        }
+
+         // Add all samples to current array
+        for (let i in samples) {
+            if (this.channels[electrode].length > this.BUFFER_SIZE - 1) {
+                this.channels[electrode].shift();
+            }
+    
+            this.channels[electrode].push(samples[i]);
+        }
+        
+        this.update_graph_handlers(samples, electrode)
+    }
+
+    // Update all visualizers with new data
+    update_graph_handlers(data, electrode) {
+        for (let i in this.graph_handlers) {
+            this.graph_handlers[i].add_data(data, electrode)
+        }
+    }
+
+    get_data() {
+        return this.channels
+    }
+}
