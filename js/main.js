@@ -31,20 +31,23 @@ export const NeuroScope = class {
 
         */
 
+        
         setInterval(() => {
             let data = this.signal_handler.get_data()
             let beta = this.feature_extractor.getAverageRelativeBandPower(data, "beta")
             let moving_average_beta = this.feature_extractor.updateBuffer("beta", beta)
             //let feature = this.feature_extractor.getAverageBetaOverDeltaPower(data)
-            this.bp_line_plot.series.addData({feature: moving_average_beta, threshold: this.threshold});
-            window.electronAPI.controlSignal({moving_average_beta, threshhold:this.threshold})
+            let payload = {feature: moving_average_beta, threshold: this.threshold}
+            this.bp_line_plot.series.addData(payload);
+            window.electronAPI.controlSignal(payload)
             //console.log(beta)
             this.bp_line_plot.render()
             //console.log(feature)
             //let beta = this.feature_extractor.getRelativeBandPower(data[0], "beta")
 
             //console.log(out)
-        }, 100);
+        }, 500);
+        
         
         
         

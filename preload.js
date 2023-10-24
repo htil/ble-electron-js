@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("electronAPI", {
+  manualControl: (command) => ipcRenderer.send("manual-control", command),
   controlSignal: (response) => ipcRenderer.send("control-signal", response),
   cancelBluetoothRequest: (callback) =>
     ipcRenderer.send("cancel-bluetooth-request", callback),
