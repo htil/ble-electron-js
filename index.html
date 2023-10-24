@@ -13,18 +13,22 @@
     <script type="text/javascript" src="js/semantic.min.js"></script>
     <script type="text/javascript" src="js/danfo.js"></script>
   </head>
-  <body>
-    <h1>NeuroScope</h1>
-    <h2 id="status" style="color: green"></h2>
-    <h2 id="samples"></h2>
+  <body style="padding-top: 50px">
+    <!--<h1>NeuroScope</h1>-->
+
+    <!--
     <button id="bluetooth" style="padding: 10">Connect</button>
     <button id="start_local_store" style="padding: 10">Start Session</button>
-    <p>
-      Currently selected bluetooth device: <strong id="device-name"></strong>
-    </p>
+  -->
+
     <div class="ui two column stackable grid container">
       <div class="column">
         <div class="ui segment">
+          <h2 id="status" style="color: green"></h2>
+          <h2 id="samples"></h2>
+          <p>
+            Device: <strong id="device-name"></strong>
+          </p>
           <div id="controls" style="height: auto">
             <!--<h2>Controls</h2>-->
             <div class="ui three column stackable center grid container">
@@ -36,9 +40,24 @@
                   justify-content: center;
                 "
               >
-                <button class="ui inverted blue center button">
+                <button id="bluetooth" class="ui inverted blue center button">
                   Connect EEG
                 </button>
+              </div>
+
+              <div class="column">
+                <div
+                  class="column"
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  "
+                >
+                  <button id="start_local_store" class="ui inverted blue center button">
+                    Record Data
+                  </button>
+                </div>
               </div>
 
               <div class="column">
@@ -66,87 +85,84 @@
                   "
                 >
                   <button class="ui inverted blue center button">
-                    Land Drone
+                    Left
                   </button>
                 </div>
               </div>
 
               <div class="column">
                 <div
-                  class="column"
-                  style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  "
-                >
-                  <button class="ui blue center button">Blue</button>
-                </div>
+                class="column"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <button class="ui inverted blue center button">
+                  Up
+                </button>
+              </div>
               </div>
 
               <div class="column">
                 <div
-                  class="column"
-                  style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  "
-                >
-                  <button class="ui blue center button">Blue</button>
-                </div>
+                class="column"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <button class="ui inverted blue center button">
+                  Right
+                </button>
+              </div>
               </div>
 
               <div class="column">
                 <div
-                  class="column"
-                  style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  "
-                >
-                  <button class="ui blue center button">Blue</button>
-                </div>
+                class="column"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <button class="ui inverted blue center button">
+                  Stop EEG
+                </button>
+              </div>
               </div>
 
               <div class="column">
                 <div
-                  class="column"
-                  style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  "
-                >
-                  <button class="ui blue center button">Blue</button>
-                </div>
+                class="column"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <button class="ui inverted blue center button">
+                  Down
+                </button>
+              </div>
               </div>
 
               <div class="column">
                 <div
-                  class="column"
-                  style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  "
-                >
-                  <button class="ui blue center button">Blue</button>
-                </div>
+                class="column"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                "
+              >
+                <button class="ui inverted blue center button">
+                  Land
+                </button>
               </div>
-
-              <div class="column">
-                <div
-                  class="column"
-                  style="
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  "
-                >
-                  <button class="ui blue center button">Blue</button>
-                </div>
               </div>
             </div>
           </div>
@@ -188,7 +204,7 @@
       <div class="column">
         <div id="graph-container" class="ui segment">
           <div id="graph" style="width: 100%; overflow: hidden;"></div>
-          <div id="session_graph"></div>
+          <div id="session_graph" style="overflow: hidden;"></div>
         </div>
       </div>
     </div>

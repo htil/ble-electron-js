@@ -1,5 +1,5 @@
 export const FeatureExtractor = class {
-    constructor(sample_rate=256, lowFreq=7, highFreq=30, filterOrder=128) {
+    constructor(sample_rate=256, lowFreq=7, highFreq=20, filterOrder=128, buffer_size=10) {
         this.bci = window.bci
         this.sampleRate = sample_rate;
         this.lowFreq = lowFreq;
@@ -13,6 +13,8 @@ export const FeatureExtractor = class {
           F2: this.highFreq,
         });
         this.filter = new Fili.FirFilter(this.coeffs);
+        this.buffer_size = buffer_size
+        this.buffer = {}
         //console.log(this.bci)
         //console.log(this.filter)
     }
@@ -37,4 +39,50 @@ export const FeatureExtractor = class {
         //console.log({delta, theta, alpha, beta, gamma})
         return target / (delta + theta + alpha + beta + gamma);
       };
+
+      getBetaOverDelta(channel) {
+        if(!channel) return
+        return this.getBandPower(channel, "beta").bp /  this.getBandPower(channel, "delta").bp
+      }
+
+      getAverage(array) {
+        if(array.length > 0) return array.reduce((a, b) => a + b) / array.length;
+      }
+
+      updateBuffer(feature, sample){
+        if(!this.buffer[feature]) {
+            this.buffer[feature] = []
+        }
+        
+        //console.log(this.buffer[feature])
+        if(this.buffer[feature].length >= this.buffer_size) {
+            this.buffer[feature].shift()
+            this.buffer[feature].push(sample)
+            //console.log(this.buffer)
+            return this.getAverage(this.buffer[feature])
+        } else {
+            this.buffer[feature].push(sample)
+            return 0
+        }
+      }
+
+      getAverageRelativeBandPower(channels, band) {
+        let features = []
+        for (let i in channels) {
+            let feature = this.getRelativeBandPower(channels[i], band)
+            features.push(feature)
+        }
+        let avg = this.getAverage(features)
+        return  avg ? avg : 0
+      }
+
+      getAverageBetaOverDeltaPower(channels) {
+        let features = []
+        for (let i in channels) {
+            let feature = this.getBetaOverDelta(channels[i])
+            features.push(feature)
+        }
+        let avg = this.getAverage(features)
+        return  avg ? avg : 0
+      }
 }

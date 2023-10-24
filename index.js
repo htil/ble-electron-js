@@ -1,4 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
+const tello = require("./tello.js");
+
 const path = require('path')
 //const BCIDevice = require("./bcidevice.js")
 
@@ -28,7 +30,7 @@ function createWindow () {
     deviceList.map((x) => {
       console.log(x.deviceName)
     });
-    selectBluetoothCallback = callback
+    //selectBluetoothCallback = callback
   
     const result = deviceList.find((device) => {
       return device.deviceName === MUSE_DEVICE_NAME
@@ -49,18 +51,24 @@ function createWindow () {
     }
   })
   
-
+  ipcMain.on('control-signal', (event, response) => {
+    console.log(response)
+  })  
   
+  /*
   ipcMain.on('cancel-bluetooth-request', (event) => {
-    selectBluetoothCallback('')
+    //selectBluetoothCallback('')
   })
+  */
   
 
   // Listen for a message from the renderer to get the response for the Bluetooth pairing.
   
+  /*
   ipcMain.on('bluetooth-pairing-response', (event, response) => {
     bluetoothPinCallback(response)
   })
+  */
   
 
   /*
